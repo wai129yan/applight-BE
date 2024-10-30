@@ -2,20 +2,24 @@
 require "dbase/db.php";
 
 
+$errors = [];
+$success = [];
 if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     
     if(isset($_POST['submit'])){
     
-        $name = trim($_POST['name']);
-        $email = trim($_POST['email']);
-        $sub   =  $_POST['subject'];
-        $sms = $_POST['message'];
+        $name = isset($_POST['name']) ? $_POST['name'] : '';
+        $email = isset($_POST['email']) ? $_POST['email'] : '';
+        $sub   = isset($_POST['subject']) ? $_POST['subject'] : '';;
+        $sms = isset($_POST['message']) ? $_POST['message'] : '';;
 
-        if(empty($name) || empty($email) || empty($sms)){
-            echo "Please fill all the fields";
-            exit;
-        }
-        
+        empty($name) ? $errors[] = "Name Required" : "" ;
+        empty($email) ? $errors[] = "Email Required" : "";
+
+
+        // !filter_var($email,FILTER_VALIDATE_EMAIL) ? $errors[] = "Invalid Email" : "";
+
+        if(count($errors) == 0) {
         $sql = "INSERT INTO contact (name, email, subject, message) VALUES (:name, :email, :sub, :sms)";
         $stmt = $pdo->prepare($sql);
 
@@ -23,8 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         $stmt->bindParam(':email', $email,PDO::PARAM_STR);
         $stmt->bindParam(':sub', $sub,PDO::PARAM_STR);
         $stmt->bindParam(':sms', $sms,PDO::PARAM_STR);     
-        $stmt -> execute();                                                                                                                                                                 
-
+        $stmt -> execute();     
+        if($stmt->execute()) {
+            $success[] = "Message Sent";
+        }else{
+            $errors[] = "Message Not Sent";
+        }                                                                                                                                                           
+        }
     }
 }
 
